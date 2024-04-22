@@ -1,0 +1,87 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+import time
+
+# Load the dataset
+df = pd.read_csv('GOOGL.csv')
+
+# Visualize the dataset
+plt.figure(figsize=(10, 6))
+plt.plot(df['Close'], label='Google Stock Price')
+plt.xlabel('Time (2004-2022)')
+plt.ylabel('Stock Price')
+plt.title('Google Stock Price Over Period 2004 to 2022')
+plt.legend()
+plt.show()
+
+# Preprocess the data
+scaler = MinMaxScaler(feature_range=(0, 1))
+df['Close_scaled'] = scaler.fit_transform(df['Close'].values.reshape(-1,1))
+
+def create_dataset(data, time_steps):
+    X, y = [], []
+    for i in range(len(data) - time_steps):
+        X.append(data[i:(i + time_steps)])
+        y.append(data[i + time_steps])
+    return np.array(X), np.array(y)
+    
+time_steps = 30  # Number of time steps to look back
+X, y = create_dataset(df['Close_scaled'].values, time_steps)
+
+
+# Split the dataset into training and testing sets
+split = int(0.8 * len(X))
+X_train, X_test = X[:split], X[split:]
+y_train, y_test = y[:split], y[split:]
+
+df.iloc[3520]
+
+
+# Build the RNN model
+model = Sequential([
+    LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], 1)),
+    LSTM(units=50),
+    Dense(units=1)
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+# Measure training time
+start_time = time.time()
+
+# Train the model
+history = model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2)
+
+
+training_time = time.time() - start_time
+print("Training Time:", training_time, "seconds")
+
+# Evaluate the model
+loss = model.evaluate(X_test, y_test)
+print("Test Loss:", loss)
+
+# Measure prediction time
+start_time = time.time()
+
+# Make predictions
+predictions = model.predict(X_test)
+
+prediction_time = time.time() - start_time
+print("Prediction Time:", prediction_time, "seconds")
+
+# Plot predictions vs actual
+plt.plot(predictions, label='Predictions')
+plt.plot(y_test, label='Actual')
+plt.xlabel('Time(2018-2022)')
+plt.ylabel('Scaled Stock Price')
+plt.title("Google stock price prediction 2018-2022")
+plt.legend()
+plt.show()
+
+
+

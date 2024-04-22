@@ -1,0 +1,95 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+# Load the data
+data = pd.read_csv("/home/radhe/Downloads/2_letter_recognition.data", header=None)
+
+# Preprocess the data
+X = data.iloc[:, 1:]
+y = data.iloc[:, 0]
+
+# Convert labels to numerical values
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(y)
+
+# Normalize features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+data.head(5)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.callbacks import History
+# Build the DNN Model
+model = Sequential()
+model.add(Dense(128, input_dim=X_train.shape[1], activation='relu'))
+model.add(Dense(64, activation='relu'))
+model.add(Dense(len(np.unique(y)), activation='softmax'))  # Output layer with softmax for multiclass classification
+# Compile the Model
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+# Train the Model
+history = model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2)
+
+loss, accuracy = model.evaluate(X_test, y_test)
+print(f'Test Loss: {loss:.4f}, Test Accuracy: {accuracy:.4f}')
+
+# Plot training history
+def plot_history(history):
+    plt.figure(figsize=(12, 4))
+
+    # Plot training & validation accuracy values
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('Model accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend(['Train', 'Validation'], loc='upper left')
+
+    # Plot training & validation loss values
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend(['Train', 'Validation'], loc='upper left')
+
+    plt.tight_layout()
+    plt.show()
+
+# Plot the history
+plot_history(history)
+
+
+
+
+# Given data
+import numpy as np
+new_data = np.array([12,14,12,8,5,9,10,4,3,5,10,7,10,12,2,6]).reshape(1, -1)
+
+# Use the model to make predictions
+predictions = model.predict(new_data)
+print(predictions)
+# Display the predictions
+predicted_class = np.argmax(predictions)
+print(f'The predicted class is: {predicted_class}')
+
+
+class_mapping = {
+    0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J',
+    10: 'K', 11: 'L', 12: 'M', 13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T',
+    20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z'
+}
+
+# Display the predicted class using the mapping
+predicted_letter = class_mapping[predicted_class]
+print(f'The predicted class is: {predicted_class}, which corresponds to the letter: {predicted_letter}')
